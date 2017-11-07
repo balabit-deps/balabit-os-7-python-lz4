@@ -1,0 +1,29 @@
+Description: Fix FTBFS on big endian
+ contentSize is an "unsigned long long", but was passing the "int"
+ format to Py_BuildValue so it chopped off the lower/upper
+ (depending on endianness) part of the number.
+Author: James Cowgill <jcowgill@debian.org>
+Bug-Debian: https://bugs.debian.org/881061
+Forwarded: no
+Last-Update: 2017-11-07
+
+--- python-lz4-0.10.1+dfsg1.orig/lz4/frame/_frame.c
++++ python-lz4-0.10.1+dfsg1/lz4/frame/_frame.c
+@@ -400,7 +400,7 @@ compress_update (PyObject * Py_UNUSED (s
+ {
+   PyObject *py_context = NULL;
+   const char *source = NULL;
+-  unsigned long source_size = 0;
++  int source_size = 0;
+   struct compression_context *context;
+   size_t compressed_bound;
+   char *destination_buffer;
+@@ -630,7 +630,7 @@ get_frame_info (PyObject * Py_UNUSED (se
+       return NULL;
+     }
+
+-  return Py_BuildValue ("{s:i,s:i,s:i,s:i,s:i}",
++  return Py_BuildValue ("{s:i,s:i,s:i,s:i,s:K}",
+                         "blockSizeID", frame_info.blockSizeID,
+                         "blockMode", frame_info.blockMode,
+                         "contentChecksumFlag", frame_info.contentChecksumFlag,
